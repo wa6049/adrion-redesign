@@ -162,7 +162,9 @@
       const through = z >= 0.999;
       cover.style.display = through ? 'none' : '';
       gold.style.display = through ? 'none' : '';
-      bgZ.style.transform = `scale(${(1.22 - 0.22 * smooth(seg(p, 0.3, 0.72))).toFixed(4)})`;
+      const bgScale = `scale(${(1.22 - 0.22 * smooth(seg(p, 0.3, 0.72))).toFixed(4)})`;
+      $$('.ax-zoom__bg', zoom).forEach((el) => { el.style.transform = bgScale; });
+      if (drawFrame) drawFrame(seg(p, 0.0, 0.9));
       open.style.opacity = String(1 - smooth(seg(p, 0.01, 0.07)));
       cueZ.style.opacity = String(1 - smooth(seg(p, 0, 0.04)));
       const heroIn = smooth(seg(p, 0.54, 0.62)), heroOut = smooth(seg(p, 0.72, 0.78));
@@ -175,6 +177,33 @@
       aboutZ.style.pointerEvents = ab > 0.5 ? 'auto' : 'none';
       hero.style.pointerEvents = heroIn > 0.5 && heroOut < 0.5 ? 'auto' : 'none';
     };
+    /* drone footage: an image sequence scrubbed by scroll, drawn to a canvas */
+    const cv = $('.ax-zoom__canvas', zoom);
+    let drawFrame = null;
+    if (cv && !reduce) {
+      const N = +cv.dataset.count;
+      const hi = innerWidth * Math.min(devicePixelRatio || 1, 2) > 1800 && !(navigator.connection && navigator.connection.saveData);
+      const pattern = hi ? cv.dataset.frames2x : cv.dataset.frames1x;
+      const url = (i) => pattern.replace('{n}', String(i + 1).padStart(3, '0'));
+      const frames = new Array(N); const ctx = cv.getContext('2d'); let shown = -1; let want = 0;
+      const nearest = (i) => { for (let d = 0; d < N; d++) { if (frames[i - d] && frames[i - d].complete && frames[i - d].naturalWidth) return frames[i - d]; if (frames[i + d] && frames[i + d].complete && frames[i + d].naturalWidth) return frames[i + d]; } return null; };
+      const size = () => { const r = Math.min(devicePixelRatio || 1, 1.5); cv.width = Math.round(cv.clientWidth * r); cv.height = Math.round(cv.clientHeight * r); shown = -1; };
+      drawFrame = (p) => {
+        want = Math.max(0, Math.min(N - 1, Math.round(p * (N - 1))));
+        const img = nearest(want); if (!img) return;
+        const key = img.src; if (key === shown) return; shown = key;
+        const cw = cv.width, ch = cv.height, iw = img.naturalWidth, ih = img.naturalHeight, k = Math.max(cw / iw, ch / ih);
+        ctx.drawImage(img, (cw - iw * k) / 2, (ch - ih * k) / 2, iw * k, ih * k);
+        cv.classList.add('is-on');
+      };
+      // load coarse-to-fine so scrubbing works early: every 16th frame, then 8th, 4th, 2nd, all
+      const order = []; const seen = new Set();
+      [16, 8, 4, 2, 1].forEach((st) => { for (let i = 0; i < N; i += st) if (!seen.has(i)) { seen.add(i); order.push(i); } });
+      let q = 0; const PAR = 6;
+      const next = () => { if (q >= order.length) return; const i = order[q++]; const im = new Image(); im.decoding = 'async'; im.onload = im.onerror = () => { if (Math.abs(i - want) < 20) { shown = -1; reqZ(); } next(); }; im.src = url(i); frames[i] = im; };
+      for (let k = 0; k < PAR; k++) next();
+      size(); addEventListener('resize', size);
+    }
     const reqZ = () => { if (!tickZ) { tickZ = true; requestAnimationFrame(drawZ); } };
     addEventListener('scroll', reqZ, { passive: true });
     addEventListener('resize', reqZ);

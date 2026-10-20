@@ -368,7 +368,7 @@ function upgradeHome(doc, ld) {
 const LOGO_D = (() => { const l = CAP.pages['/'].head.links.find((x) => x.includes('data:image/svg')); return decodeURIComponent(l.match(/href="([^"]+)"/)[1]).match(/ d='([^']+)'/)[1]; })();
 /* Homepage intro: the gold Adrion "A" becomes a window onto Biokovo (the mountain Strabo called Adrion)
    and the camera flies through its thickest stroke into the landscape. */
-function upgradeHomeIntro(doc) {
+function upgradeHomeIntro(doc, { drone = false } = {}) {
   const intro = doc.querySelector('section.intro');
   if (!intro) return;
   const about = intro.querySelector('.about');
@@ -376,12 +376,14 @@ function upgradeHomeIntro(doc) {
   const bg = '/img/regions/srednja-dalmacija/biokovo-over-makarska.webp';
   const html = `<section class="ax-zoom" aria-labelledby="ax-zoom-h" data-focus="386,384" data-center="296,251">
  <div class="ax-zoom__stage">
-  <img class="ax-zoom__bg" src="${imgUrl(bg)}" width="2000" height="1334" alt="Mount Biokovo above the Makarska Riviera" fetchpriority="high" decoding="async">
+  ${drone
+    ? `<img class="ax-zoom__bg ax-zoom__poster" src="${imgUrl('/hero/frames-1x/f001.webp')}" width="1280" height="710" alt="Drone footage of the Croatian coast at sunset" fetchpriority="high" decoding="async"><canvas class="ax-zoom__bg ax-zoom__canvas" aria-hidden="true" data-frames-1x="${imgUrl('/hero/frames-1x/f{n}.webp')}" data-frames-2x="${imgUrl('/hero/frames-2x/f{n}.webp')}" data-count="241"></canvas>`
+    : `<img class="ax-zoom__bg" src="${imgUrl(bg)}" width="2000" height="1334" alt="Mount Biokovo above the Makarska Riviera" fetchpriority="high" decoding="async">`}
   <div class="ax-zoom__veil" aria-hidden="true"></div>
   <svg class="ax-zoom__svg" aria-hidden="true" focusable="false"><defs><mask id="ax-zoom-mask" maskUnits="userSpaceOnUse" x="0" y="0" width="100%" height="100%"><rect x="0" y="0" width="100%" height="100%" fill="#fff"></rect><g class="ax-zoom__g"><path fill="#000" fill-rule="evenodd" d="${LOGO_D}"></path></g></mask></defs><rect class="ax-zoom__cover" x="0" y="0" width="100%" height="100%" fill="#0a0a0a" mask="url(#ax-zoom-mask)"></rect><g class="ax-zoom__g ax-zoom__gold"><path fill="#d4af37" fill-rule="evenodd" d="${LOGO_D}"></path></g></svg>
   <div class="ax-zoom__open"><span class="ax-zoom__k">Adrion · Curated Croatia</span><p class="ax-zoom__line">Named for Biokovo, the mountain Strabo called Adrion</p></div>
   <div class="ax-zoom__cue" aria-hidden="true"><span>Scroll to enter</span><i></i></div>
-  <div class="hero-type svelte-1lxd2ek ax-zoom__hero"><span class="k svelte-1lxd2ek">Mount Biokovo · Above the Makarska Riviera</span><h1 id="ax-zoom-h" class="svelte-1lxd2ek">We don’t show you Croatia.<br class="svelte-1lxd2ek"><em class="svelte-1lxd2ek">We take you into it.</em></h1></div>
+  <div class="hero-type svelte-1lxd2ek ax-zoom__hero"><span class="k svelte-1lxd2ek">${drone ? 'Adrion · Curated Croatia' : 'Mount Biokovo · Above the Makarska Riviera'}</span><h1 id="ax-zoom-h" class="svelte-1lxd2ek">We don’t show you Croatia.<br class="svelte-1lxd2ek"><em class="svelte-1lxd2ek">We take you into it.</em></h1></div>
   <div class="ax-zoom__about">${aboutHtml}</div>
  </div>
 </section>`;
@@ -777,6 +779,13 @@ for (const p of Object.keys(PAGES)) {
   const links = CAP.pages['/'].head.links.filter((l) => !/canonical/.test(l)).concat([`<link rel="canonical" href="${ORIGIN}/">`]);
   const html = render('/', doc, { metas, links, title: 'Preview: new intro — Adrion Custom Travel Agency' });
   write(path.join(OUT, 'home-preview/index.html'), html);
+}
+{
+  const doc = parseHTML('<!doctype html><html><head></head><body>' + CAP.pages['/'].body.replace(/<!--[\s\S]*?-->/g, '') + '</body></html>').document;
+  upgradeHomeIntro(doc, { drone: true });
+  const metas = CAP.pages['/'].head.metas.concat(['<meta name="robots" content="noindex">']);
+  const links = CAP.pages['/'].head.links.filter((l) => !/canonical/.test(l)).concat([`<link rel="canonical" href="${ORIGIN}/">`]);
+  write(path.join(OUT, 'home-preview-drone/index.html'), render('/', doc, { metas, links, title: 'Preview: drone intro — Adrion Custom Travel Agency' }));
 }
 /* CSS + JS assets (original stylesheets kept at their original paths) */
 for (const f of CSS_FILES) write(path.join(OUT, f.url), f.css);
