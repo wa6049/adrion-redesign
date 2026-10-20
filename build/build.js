@@ -611,18 +611,72 @@ ${extraHead}${ldJson}
 }
 
 /* ------------------------------------------------------------------ gallery page */
+/* reel order: open with the strongest frames, then the interleaved set */
+const REEL_LEAD = ['/img/places/hvar-3.webp', '/img/journeys/cetina/cetina-rapids-crew.webp', '/img/places/dubrovnik-above-2.webp', '/img/places/plitvice-falls.webp', '/img/regions/istra-kvarner/rovinj-dawn-aerial.webp', '/img/moments/yacht-4.webp', '/img/regions/srednja-dalmacija/biokovo-over-makarska.webp', '/img/moments/dining-6.webp', '/img/places/kornati-2.webp', '/img/regions/zagreb-zagorje/sljeme-summit-ridges.webp', '/img/places/ilok.webp', '/img/places/vis.webp'];
+const THEME_NOTE = {
+  water: ['Charter the Adriatic', 'Yachts, catamarans and private speedboats', '/charter'],
+  stays: ['Where you will stay', 'Villas and hotels we have seen ourselves', '/luxury-accommodation'],
+  table: ['At the table', 'Wine, truffles and long regional lunches', '/destinations'],
+  active: ['Active days', 'Rafting, canyoning and e-MTB with private guides', '/one-day-journeys'],
+  towns: ['Towns & heritage', 'Roman stone and Venetian squares', '/destinations'],
+  islands: ['The islands', 'Hvar, Vis, Korčula and the quiet ones', '/destinations'],
+  nature: ['Nature & parks', 'Lakes, canyons and mountain balconies', '/destinations'],
+};
+function regionFacts(slug) {
+  const items = region[slug].groups.flatMap((g) => g.items.filter((i) => !i.soon));
+  const prices = items.map((i) => +((i.price.match(/€([\d,]+)/) || [])[1] || '0').replace(/,/g, '')).filter(Boolean);
+  const from = prices.length ? '€' + Math.min(...prices).toLocaleString('en-US') : '';
+  return { count: items.length, from };
+}
 function galleryMain() {
   const chips = (key, entries) => [['all', 'All'], ...entries].map(([v, l]) => `<button type="button" class="ax-chip" data-filter="${key}" data-value="${v}" aria-pressed="${v === 'all'}">${esc(l)}</button>`).join('');
   const items = GALLERY.map((g) => `<figure class="ax-g-item" data-region="${g.region || 'none'}" data-theme="${g.theme}" style="--ar:${g.w}/${g.h}">${tile(g, { sizes: '(max-width: 640px) 100vw, (max-width: 1000px) 50vw, 33vw' })}</figure>`).join('');
   const photographers = [...new Map(UNSPLASH.map((u) => [u.user, u])).values()].sort((a, b) => a.name.localeCompare(b.name));
-  return `<main class="ax-gallery-page"><header class="ax-gallery-hero"><span class="ax-kicker">The Gallery</span><h1>Croatia, frame by frame</h1><p class="ax-lede">The coast at first light, the canyon from the raft, island harbours and long inland tables. Browse by region or by the kind of day you are dreaming of; every photograph leads somewhere we travel.</p></header>
-<div class="ax-filters" role="group" aria-label="Filter photographs"><div class="ax-filter-row"><span id="f-region">Region</span>${chips('region', REGION_SLUGS.map((s) => [s, REGIONS[s].short]))}</div><div class="ax-filter-row"><span id="f-theme">Theme</span>${chips('theme', Object.entries(THEMES))}</div></div>
+  const lead = REEL_LEAD.map((s) => GALLERY.find((g) => g.src === s)).filter(Boolean);
+  const reel = [...lead, ...GALLERY.filter((g) => !lead.includes(g))].map((g) => ({
+    s: g.src.startsWith('u:') ? uUrl(g.src.slice(2), 1000) : imgUrl(g.src), f: fullUrl(g.src), c: g.caption, r: g.region || '', t: g.theme, cr: g.credit, p: g.h > g.w ? 1 : 0,
+  }));
+  const regs = Object.fromEntries(REGION_SLUGS.map((s) => { const f = regionFacts(s); return [s, { n: REGIONS[s].name, k: region[s].kicker, c: f.count, from: f.from, h: '/destinations/' + s }]; }));
+  const data = JSON.stringify({ items: reel, regions: regs, themes: THEMES, notes: THEME_NOTE }).replace(/</g, '\\u003c');
+  const filters = `<div class="ax-filter-row"><span>Region</span>${chips('region', REGION_SLUGS.map((s) => [s, REGIONS[s].short]))}</div><div class="ax-filter-row"><span>Theme</span>${chips('theme', Object.entries(THEMES))}</div>`;
+  return `<main class="ax-gallery-page ax-reel-page" data-view="reel"><h1 class="ax-sr">Gallery: Croatia, frame by frame</h1>
+<section class="ax-reel" aria-label="Photograph reel">
+ <div class="ax-reel__stage">
+  <div class="ax-reel__loader" aria-hidden="true"><span class="ax-reel__count">0</span></div>
+  <aside class="ax-reel__info" aria-live="polite">
+   <p class="ax-reel__title"><span class="ax-roll" data-k="title">Croatia, frame by frame</span></p>
+   <dl class="ax-reel__table">
+    <div><dt>Region</dt><dd><span class="ax-roll" data-k="region"></span></dd></div>
+    <div><dt>Theme</dt><dd><span class="ax-roll" data-k="theme"></span></dd></div>
+    <div><dt>Photograph</dt><dd><span class="ax-roll" data-k="credit"></span></dd></div>
+   </dl>
+  </aside>
+  <div class="ax-reel__track" data-lb-group="reel"></div>
+  <div class="ax-reel__notes">
+   <a class="ax-reel__note" data-k="note1" href="/destinations"><small class="ax-roll" data-k="n1k"></small><span class="ax-roll" data-k="n1"></span></a>
+   <a class="ax-reel__note" data-k="note2" href="/inquire"><small class="ax-roll" data-k="n2k"></small><span class="ax-roll" data-k="n2"></span></a>
+  </div>
+  <div class="ax-reel__bar">
+   <div class="ax-reel__index"><button type="button" class="ax-reel__indexbtn" aria-expanded="false" aria-controls="ax-index">Index <span aria-hidden="true">⌄</span></button>
+    <div class="ax-reel__panel" id="ax-index" hidden role="group" aria-label="Filter photographs">${filters}</div></div>
+   <span class="ax-reel__frame" aria-hidden="true"><span class="ax-reel__n">001</span> / <span class="ax-reel__total">${String(reel.length).padStart(3, '0')}</span></span>
+   <span class="ax-reel__hint" aria-hidden="true">Scroll or use ← →</span>
+   <button type="button" class="ax-reel__viewbtn" data-view-to="grid">Grid view</button>
+  </div>
+ </div>
+ <div class="ax-reel__spacer"></div>
+ <script type="application/json" id="ax-reel-data">${data}</script>
+</section>
+<section class="ax-grid-view" aria-label="All photographs as a grid">
+<header class="ax-gallery-hero"><span class="ax-kicker">The Gallery</span><h2 class="ax-grid-title">Croatia, frame by frame</h2><p class="ax-lede">The coast at first light, the canyon from the raft, island harbours and long inland tables. Browse by region or by the kind of day you are dreaming of; every photograph leads somewhere we travel.</p><p style="margin-top:24px"><button type="button" class="ax-btn" data-view-to="reel">Back to the reel</button></p></header>
+<div class="ax-filters" role="group" aria-label="Filter photographs">${filters}</div>
 <div class="ax-g-meta"><span class="ax-g-count" aria-live="polite">${GALLERY.length} photographs</span><span>Select a photograph to view it full screen</span></div>
 <div class="ax-gallery" data-lb-group="gallery">${items}</div>
 <p class="ax-g-empty" hidden>No photographs match this combination yet. Try another region or theme.</p>
 <div class="ax-g-actions"><button type="button" class="ax-btn ax-g-more">Show more photographs</button></div>
 <div class="ax-g-actions"><a class="ax-btn" href="/inquire">Plan a journey</a></div>
-<p class="ax-credits">Photographs by Adrion, with additional images from <a href="https://unsplash.com/?${utm}" target="_blank" rel="noopener">Unsplash</a> used under the Unsplash License. With thanks to ${photographers.map((u) => `<a href="https://unsplash.com/@${esc(u.user)}?${utm}" target="_blank" rel="noopener">${esc(u.name)}</a>`).join(', ')}.</p></main>`;
+<p class="ax-credits">Photographs by Adrion, with additional images from <a href="https://unsplash.com/?${utm}" target="_blank" rel="noopener">Unsplash</a> used under the Unsplash License. With thanks to ${photographers.map((u) => `<a href="https://unsplash.com/@${esc(u.user)}?${utm}" target="_blank" rel="noopener">${esc(u.name)}</a>`).join(', ')}.</p>
+</section></main>`;
 }
 
 /* ------------------------------------------------------------------ assemble */

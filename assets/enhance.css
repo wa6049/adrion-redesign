@@ -310,3 +310,124 @@ a.journey.ax-has-thumb, div.journey.ax-has-thumb { align-items: center; gap: cla
   .ax-g-meta span:last-child { display: none; }
   .ax-tile .ax-cap { display: none; }
 }
+
+/* Navigation: with Gallery added the bar needs room. Tighten on laptops, switch to the menu button sooner. */
+@media (761px <= width <= 1280px) {
+  nav.bar .nav { gap: 22px; letter-spacing: .18em; }
+  nav.bar .right { gap: 20px; }
+}
+@media (761px <= width <= 1060px) {
+  nav.bar .nav, nav.bar .lang { display: none; }
+  nav.bar .toggle { display: inline-block; }
+}
+
+/* ==========================================================================
+   Gallery reel: scroll moves a tilted reel of photo prints; the print in
+   focus drives an info table (top left) and two notes (bottom), A24-style.
+   ========================================================================== */
+.ax-sr { position: absolute !important; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+.ax-reel-page { padding: 0; min-height: 0; }
+.ax-reel-page[data-view="reel"] .ax-grid-view { display: none; }
+.ax-reel-page[data-view="grid"] .ax-reel { display: none; }
+.ax-reel-page[data-view="grid"] .ax-grid-view { padding-top: var(--space-top); padding-bottom: var(--space-3xl); }
+.ax-reel { position: relative; }
+.ax-reel__stage {
+  position: sticky; top: 0; height: 100vh; height: 100svh; overflow: hidden;
+  perspective: 1600px; perspective-origin: 50% 45%;
+  background: radial-gradient(ellipse at 50% 55%, #17150f 0%, var(--brand-obsidian) 62%);
+}
+.ax-reel__spacer { pointer-events: none; }
+.ax-reel__track { position: absolute; inset: 0; transform-style: preserve-3d; }
+.ax-reel__card {
+  --dim: 0;
+  position: absolute; left: 50%; top: 52%;
+  width: clamp(220px, 30vw, 460px); aspect-ratio: 4 / 3;
+  padding: 0; border: 0; cursor: pointer; background: var(--brand-champagne);
+  box-shadow: 0 0 0 8px var(--brand-champagne), 0 40px 80px -20px #000000d9, 0 18px 30px -18px #000;
+  transform-origin: 50% 50%; will-change: transform, opacity;
+  transition: box-shadow var(--dur-2) var(--ease-out);
+}
+.ax-reel__card.is-portrait { width: clamp(170px, 21vw, 330px); aspect-ratio: 3 / 4; }
+.ax-reel__card img {
+  display: block; width: 100%; height: 100%; object-fit: cover; background: var(--brand-coal);
+  filter: brightness(calc(1 - var(--dim) * .42)) saturate(calc(1 - var(--dim) * .25)) sepia(calc(var(--dim) * .15));
+}
+.ax-reel__card.is-active { box-shadow: 0 0 0 8px var(--brand-champagne), 0 0 0 9px #d4af3799, 0 50px 90px -20px #000000f0; cursor: zoom-in; }
+.ax-reel__card:focus-visible { outline: 2px solid var(--brand-gold); outline-offset: 14px; box-shadow: 0 0 0 8px var(--brand-champagne); }
+
+.ax-reel__info {
+  position: absolute; z-index: 120; top: clamp(88px, 13vh, 120px); left: var(--gutter);
+  width: min(300px, calc(100vw - 2 * var(--gutter)));
+}
+.ax-reel__title {
+  font-family: var(--font-display); font-variant-caps: small-caps; font-weight: 300; color: var(--ink-1);
+  font-size: clamp(26px, 2.6vw, 36px); line-height: 1.02; margin: 0 0 12px; overflow: hidden; min-height: 1.05em;
+}
+.ax-reel__table { margin: 0; }
+.ax-reel__table > div { display: flex; justify-content: space-between; gap: 16px; border-top: 1px solid var(--hair); padding: 7px 0 6px; }
+.ax-reel__table dt { font-size: 9.5px; letter-spacing: .22em; text-transform: uppercase; color: var(--ink-3); padding-top: 2px; }
+.ax-reel__table dd { margin: 0; font-size: 12.5px; color: var(--ink-1); text-align: right; overflow: hidden; }
+.ax-reel__table dd a { color: var(--ink-2); border-bottom: 1px solid var(--hair); }
+.ax-roll { display: inline-block; }
+.ax-roll.is-in { animation: ax-roll .62s var(--ease-out) both; }
+@keyframes ax-roll { from { transform: translateY(105%); opacity: 0; } to { transform: none; opacity: 1; } }
+
+.ax-reel__notes {
+  position: absolute; z-index: 120; left: 50%; bottom: clamp(70px, 11vh, 110px); transform: translateX(-50%);
+  display: grid; grid-template-columns: 1fr 1fr; gap: clamp(28px, 5vw, 80px); width: min(720px, calc(100vw - 2 * var(--gutter)));
+  text-align: center;
+}
+.ax-reel__note { display: block; color: var(--ink-1); text-decoration: none; overflow: hidden; }
+.ax-reel__note small {
+  display: block; font-size: 9.5px; letter-spacing: .24em; text-transform: uppercase; color: var(--brand-gold); margin-bottom: 8px;
+}
+.ax-reel__note > span {
+  font-family: var(--font-display); font-variant-caps: small-caps; font-weight: 300; font-size: clamp(17px, 1.7vw, 23px); line-height: 1.12;
+  transition: color var(--dur-1) var(--ease-out);
+}
+.ax-reel__note:hover > span, .ax-reel__note:focus-visible > span { color: var(--brand-gold); }
+
+.ax-reel__bar {
+  position: absolute; z-index: 130; left: var(--gutter); right: var(--gutter); bottom: 22px;
+  display: flex; align-items: center; gap: 22px; font-size: 11px; letter-spacing: .2em; text-transform: uppercase; color: var(--ink-2);
+}
+.ax-reel__frame { font-family: var(--font-display); letter-spacing: .08em; font-size: 13px; color: var(--ink-1); }
+.ax-reel__hint { margin-left: auto; color: var(--ink-3); }
+.ax-reel__bar button {
+  appearance: none; background: none; border: 0; padding: 8px 0; cursor: pointer; color: var(--ink-1);
+  font: inherit; letter-spacing: inherit; text-transform: inherit; border-bottom: 1px solid transparent;
+}
+.ax-reel__bar button:hover, .ax-reel__bar button:focus-visible { color: var(--brand-gold); border-bottom-color: var(--brand-gold); outline: none; box-shadow: none; }
+.ax-reel__index { position: relative; }
+.ax-reel__panel {
+  position: absolute; bottom: calc(100% + 12px); left: 0; width: min(560px, calc(100vw - 2 * var(--gutter)));
+  background: #0a0a0af2; border: 1px solid var(--hair); padding: 18px; display: grid; gap: 12px;
+  -webkit-backdrop-filter: blur(8px); backdrop-filter: blur(8px); text-transform: none; letter-spacing: normal;
+}
+.ax-reel__panel .ax-filter-row { flex-wrap: wrap; overflow: visible; margin: 0; padding: 0; }
+.ax-reel__bar .ax-reel__panel .ax-chip { border: 1px solid var(--hair); padding: 9px 12px; letter-spacing: .06em; font-size: 11.5px; text-transform: none; color: var(--ink-2); }
+.ax-reel__bar .ax-reel__panel .ax-chip[aria-pressed="true"] { color: var(--brand-obsidian); background: var(--brand-gold); border-color: var(--brand-gold); }
+
+/* intro counter */
+.ax-reel__loader {
+  position: absolute; inset: 0; z-index: 200; background: var(--brand-obsidian);
+  display: flex; align-items: center; padding-left: 24vw; transition: opacity .7s var(--ease-out), visibility .7s;
+}
+.ax-reel__count { font-family: var(--font-display); font-weight: 300; font-size: clamp(64px, 8vw, 120px); color: var(--ink-1); font-variant-numeric: tabular-nums; }
+.is-ready > .ax-reel__loader { opacity: 0; visibility: hidden; }
+.ax-reel__stage:not(.is-ready) .ax-reel__card { opacity: 0 !important; }
+
+@media (width <= 760px) {
+  .ax-reel__card { width: 62vw; box-shadow: 0 0 0 5px var(--brand-champagne), 0 30px 60px -20px #000; }
+  .ax-reel__card.is-portrait { width: 46vw; }
+  .ax-reel__card.is-active { box-shadow: 0 0 0 5px var(--brand-champagne), 0 0 0 6px #d4af3799, 0 30px 60px -20px #000; }
+  .ax-reel__info { top: 76px; }
+  .ax-reel__table > div:nth-child(3) { display: none; }
+  .ax-reel__notes { grid-template-columns: 1fr; gap: 14px; bottom: 74px; }
+  .ax-reel__notes .ax-reel__note:first-child { display: none; }
+  .ax-reel__hint { display: none; }
+  .ax-reel__bar { gap: 16px; }
+  .ax-reel__frame { margin-left: auto; }
+  .ax-reel__loader { padding-left: 12vw; }
+}
+@media (prefers-reduced-motion: reduce) { .ax-roll.is-in { animation: none; } }

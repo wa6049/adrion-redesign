@@ -343,35 +343,37 @@
     const img = $('.ax-lb__img', lb);
     img.classList.remove('is-in');
     img.onload = () => img.classList.add('is-in');
-    img.src = t.getAttribute('data-full');
-    img.alt = t.getAttribute('data-caption') || '';
-    $('.ax-lb__text', lb).textContent = t.getAttribute('data-caption') || '';
-    const credit = $('.ax-lb__credit', lb);
-    credit.innerHTML = t.getAttribute('data-credit') || '';
+    img.src = t.full;
+    img.alt = t.caption || '';
+    $('.ax-lb__text', lb).textContent = t.caption || '';
+    $('.ax-lb__credit', lb).innerHTML = t.credit || '';
     $('.ax-lb__count', lb).textContent = (idx + 1) + ' / ' + list.length;
-    const multi = list.length > 1;
-    $$('.ax-lb__nav', lb).forEach((b) => { b.hidden = !multi; });
+    $$('.ax-lb__nav', lb).forEach((b) => { b.hidden = list.length < 2; });
     [list[(idx + 1) % list.length], list[(idx - 1 + list.length) % list.length]].forEach((nb) => {
-      if (nb) { const p = new Image(); p.src = nb.getAttribute('data-full'); }
+      if (nb) { const p = new Image(); p.src = nb.full; }
     });
   };
   function closeLB() {
     lb.hidden = true;
     document.documentElement.classList.remove('ax-lb-open');
-    if (opener) opener.focus();
+    if (opener && opener.isConnected) opener.focus();
   }
+  const openLB = (items, start, from) => {
+    list = items; opener = from || document.activeElement;
+    if (!lb) buildLB();
+    lb.hidden = false;
+    document.documentElement.classList.add('ax-lb-open');
+    show(start);
+    $('.ax-lb__close', lb).focus();
+  };
+  const isLBOpen = () => !!lb && !lb.hidden;
   document.addEventListener('click', (e) => {
     const t = e.target.closest('[data-full]');
     if (!t) return;
     e.preventDefault();
     const group = t.closest('[data-lb-group]') || document;
-    list = $$('[data-full]', group).filter((x) => !x.closest('[hidden]'));
-    opener = t;
-    if (!lb) buildLB();
-    lb.hidden = false;
-    document.documentElement.classList.add('ax-lb-open');
-    show(list.indexOf(t));
-    $('.ax-lb__close', lb).focus();
+    const els = $$('[data-full]', group).filter((x) => !x.closest('[hidden]'));
+    openLB(els.map((x) => ({ full: x.getAttribute('data-full'), caption: x.getAttribute('data-caption'), credit: x.getAttribute('data-credit') })), els.indexOf(t), t);
   });
 
   /* ---------- Gallery page: filters + progressive reveal ---------- */
@@ -408,7 +410,160 @@
       apply();
     }));
     if (more) more.addEventListener('click', () => { state.limit += STEP; apply(); });
+    chips.forEach((c) => c.addEventListener('click', () => document.dispatchEvent(new CustomEvent('ax:filter', { detail: { region: state.region, theme: state.theme } }))));
+    window.axGalleryState = state;
     apply();
+  }
+
+  /* ---------- Gallery reel (scroll-driven 3D photo reel) ---------- */
+  const page = $('.ax-reel-page');
+  const reelEl = page && $('.ax-reel', page);
+  if (page && reelEl) {
+    let data = { items: [], regions: {}, themes: {}, notes: {} };
+    try { data = JSON.parse($('#ax-reel-data').textContent); } catch (e) { /* keep empty */ }
+    const stage = $('.ax-reel__stage', reelEl);
+    const track = $('.ax-reel__track', reelEl);
+    const spacer = $('.ax-reel__spacer', reelEl);
+    const nEl = $('.ax-reel__n', reelEl);
+    const totalEl = $('.ax-reel__total', reelEl);
+    const rolls = {};
+    $$('.ax-roll', reelEl).forEach((r) => { rolls[r.dataset.k] = r; });
+    const pad = (n) => String(n).padStart(3, '0');
+    let items = data.items.slice();
+    let f = 0; let lastActive = -1; let ticking = false;
+    const POOL = 11; const pool = [];
+    for (let i = 0; i < POOL; i++) {
+      const b = document.createElement('button');
+      b.type = 'button'; b.className = 'ax-reel__card'; b.tabIndex = -1;
+      b.innerHTML = '<img alt="" decoding="async" width="1000" height="750">';
+      b.addEventListener('click', () => {
+        const k = +b.dataset.k;
+        if (k === Math.round(f)) openLB(items.map((x) => ({ full: x.f, caption: x.c, credit: x.cr })), k, b);
+        else goTo(k);
+      });
+      track.appendChild(b); pool.push(b);
+    }
+    const stepPx = () => Math.max(260, innerHeight * (innerWidth < 760 ? 0.62 : 0.5));
+    const layout = () => { spacer.style.height = ((items.length - 1) * stepPx()) + 'px'; totalEl.textContent = pad(items.length); };
+    const topOf = () => reelEl.getBoundingClientRect().top + scrollY;
+    const goTo = (k) => {
+      k = Math.max(0, Math.min(items.length - 1, k));
+      scrollTo({ top: topOf() + k * stepPx(), behavior: reduce ? 'auto' : 'smooth' });
+    };
+    const setRoll = (k, val, html) => {
+      const el = rolls[k]; if (!el) return;
+      if (html ? el.innerHTML === val : el.textContent === val) return;
+      if (html) el.innerHTML = val; else el.textContent = val;
+      el.classList.remove('is-in'); void el.offsetWidth; el.classList.add('is-in');
+    };
+    const info = (k) => {
+      const it = items[k]; if (!it) return;
+      const r = data.regions[it.r];
+      setRoll('title', it.c);
+      setRoll('region', r ? r.n : 'Across Croatia');
+      setRoll('theme', data.themes[it.t] || '');
+      setRoll('credit', it.cr.replace(/^Photo:\s*/, ''), true);
+      const n1 = $('.ax-reel__note[data-k=note1]', reelEl); const n2 = $('.ax-reel__note[data-k=note2]', reelEl);
+      const note = data.notes[it.t] || ['Croatia', '', '/destinations'];
+      if (r) {
+        setRoll('n1k', r.n); setRoll('n1', '\u201C' + r.k + '\u201D'); n1.href = r.h;
+        setRoll('n2k', 'Travel it privately'); setRoll('n2', r.c + ' journeys' + (r.from ? ', from ' + r.from : '')); n2.href = r.h;
+      } else {
+        setRoll('n1k', note[0]); setRoll('n1', '\u201C' + note[1] + '\u201D'); n1.href = note[2];
+        setRoll('n2k', 'Travel it privately'); setRoll('n2', 'Plan a journey'); n2.href = $('nav.bar a[href*="inquire"]') ? $('nav.bar a[href*="inquire"]').getAttribute('href') : '/inquire';
+      }
+      nEl.textContent = pad(k + 1);
+    };
+    const render = () => {
+      ticking = false;
+      if (page.dataset.view !== 'reel' || !items.length) return;
+      const st = stepPx();
+      f = Math.max(0, Math.min(items.length - 1, (scrollY - topOf()) / st));
+      const W = innerWidth; const H = innerHeight; const mobile = W < 760;
+      const base = Math.round(f);
+      const dx = mobile ? W * 0.62 : Math.min(W * 0.3, 470);
+      const dy = mobile ? H * 0.07 : H * 0.13;
+      pool.forEach((card, i) => {
+        const k = base - Math.floor(POOL / 2) + i;
+        const it = items[k];
+        if (!it) { card.hidden = true; return; }
+        card.hidden = false;
+        const d = k - f; const ad = Math.abs(d);
+        if (card.dataset.k !== String(k)) {
+          card.dataset.k = k;
+          const im = card.firstChild; im.src = it.s; card.classList.toggle('is-portrait', !!it.p);
+          card.setAttribute('aria-label', it.c);
+        }
+        const sc = 1 - Math.min(ad, 4) * 0.09;
+        const tx = d * dx; const ty = -d * dy;
+        const ry = Math.max(-1, Math.min(1, d)) * -14;
+        card.style.transform = `translate3d(calc(-50% + ${tx.toFixed(1)}px), calc(-50% + ${ty.toFixed(1)}px), ${(-ad * 120).toFixed(0)}px) rotateX(18deg) rotateY(${ry.toFixed(2)}deg) rotateZ(-7deg) scale(${sc.toFixed(3)})`;
+        card.style.zIndex = String(100 - Math.round(ad * 10));
+        card.style.opacity = String(Math.max(0, Math.min(1, 4.2 - ad)));
+        card.style.setProperty('--dim', Math.min(1, ad).toFixed(3));
+        const active = k === base;
+        card.classList.toggle('is-active', active);
+        card.tabIndex = active ? 0 : -1;
+        card.setAttribute('aria-hidden', ad > 2.5 ? 'true' : 'false');
+      });
+      if (base !== lastActive) { lastActive = base; info(base); }
+    };
+    const req = () => { if (!ticking) { ticking = true; requestAnimationFrame(render); } };
+    addEventListener('scroll', req, { passive: true });
+    addEventListener('resize', () => { layout(); req(); });
+    document.addEventListener('keydown', (e) => {
+      if (page.dataset.view !== 'reel' || isLBOpen() || /input|select|textarea/i.test(document.activeElement.tagName)) return;
+      const r = reelEl.getBoundingClientRect(); if (r.bottom < 0 || r.top > innerHeight) return;
+      if (e.key === 'ArrowRight' || e.key === 'ArrowDown' && e.altKey) { e.preventDefault(); goTo(Math.round(f) + 1); }
+      else if (e.key === 'ArrowLeft') { e.preventDefault(); goTo(Math.round(f) - 1); }
+    });
+    const filterTo = (st) => {
+      items = data.items.filter((x) => (st.region === 'all' || x.r === st.region) && (st.theme === 'all' || x.t === st.theme));
+      lastActive = -1; layout();
+      scrollTo({ top: topOf(), behavior: 'auto' });
+      if (!items.length) { pool.forEach((c) => { c.hidden = true; }); setRoll('title', 'No photographs here yet'); nEl.textContent = '000'; return; }
+      req();
+    };
+    document.addEventListener('ax:filter', (e) => filterTo(e.detail));
+    // Index dropdown
+    const ib = $('.ax-reel__indexbtn', reelEl); const panel = $('.ax-reel__panel', reelEl);
+    const setPanel = (open) => { panel.hidden = !open; ib.setAttribute('aria-expanded', String(open)); };
+    ib.addEventListener('click', () => setPanel(panel.hidden));
+    panel.addEventListener('click', (e) => { if (e.target.closest('[data-filter]')) setPanel(false); });
+    document.addEventListener('keydown', (e) => { if (e.key === 'Escape' && !panel.hidden) { setPanel(false); ib.focus(); } });
+    document.addEventListener('click', (e) => { if (!panel.hidden && !e.target.closest('.ax-reel__index')) setPanel(false); });
+    // view switching (reel <-> grid)
+    const setView = (v, push) => {
+      page.dataset.view = v;
+      if (push) { const p = new URLSearchParams(location.search); if (v === 'grid') p.set('view', 'grid'); else p.delete('view'); history.replaceState(null, '', location.pathname + (p.toString() ? '?' + p : '')); }
+      if (v === 'reel') { layout(); req(); }
+      scrollTo({ top: 0, behavior: 'auto' });
+    };
+    $$('[data-view-to]').forEach((b) => b.addEventListener('click', () => setView(b.dataset.viewTo, true)));
+    const q = new URLSearchParams(location.search);
+    const start = q.get('view') === 'grid' || reduce ? 'grid' : 'reel';
+    if (window.axGalleryState && (window.axGalleryState.region !== 'all' || window.axGalleryState.theme !== 'all')) {
+      items = data.items.filter((x) => (window.axGalleryState.region === 'all' || x.r === window.axGalleryState.region) && (window.axGalleryState.theme === 'all' || x.t === window.axGalleryState.theme));
+    }
+    page.dataset.view = start;
+    layout(); render();
+    // intro counter, A24-style: runs while the first frames load
+    const loader = $('.ax-reel__loader', reelEl); const cnt = $('.ax-reel__count', reelEl);
+    if (start === 'reel' && !reduce && loader) {
+      const firsts = pool.filter((c) => !c.hidden).map((c) => c.firstChild);
+      const done = Promise.all(firsts.slice(0, 5).map((im) => (im.complete ? 0 : new Promise((r) => { im.onload = im.onerror = r; }))));
+      let shown = 0; let ready = false; done.then(() => { ready = true; });
+      const t0 = performance.now();
+      const tick = (t) => {
+        const target = ready ? 100 : Math.min(92, (t - t0) / 18);
+        shown += Math.max(0.6, (target - shown) * 0.12);
+        if (shown > target) shown = target;
+        cnt.textContent = String(Math.floor(shown));
+        if (shown >= 100 || t - t0 > 4000) { cnt.textContent = '100'; stage.classList.add('is-ready'); setTimeout(() => { loader.hidden = true; }, 700); return; }
+        requestAnimationFrame(tick);
+      };
+      requestAnimationFrame(tick);
+    } else { if (loader) loader.hidden = true; stage.classList.add('is-ready'); }
   }
 
   /* ---------- Gentle reveal on scroll ---------- */
