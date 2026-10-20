@@ -116,6 +116,7 @@ for (const p of Object.keys(PAGES)) {
     group: journeyGroup[p] || '',
   };
   const j = journeys[p];
+  for (const s of REGION_SLUGS) { const it = region[s].groups.flatMap((g) => g.items).find((i) => i.href === p); if (it) j.cardTitle = it.name; }
   j.emptyHero = j.slides.length === 0;
   if (j.emptyHero) j.slides = [...new Set(j.dayImgs.filter((s) => !/\/moments\//.test(s)))].slice(0, 6);
   if (!j.slides.length) j.slides = j.dayImgs.slice(0, 1);
@@ -140,8 +141,10 @@ for (const p of Object.keys(PAGES)) D(p).querySelectorAll('img').forEach((i) => 
   if (a && !ALTS[s]) ALTS[s] = a;
 });
 /* which region an image belongs to, from the journeys that use it */
-const IMG_REGION = {};
-for (const j of Object.values(journeys)) [...j.slides, ...j.dayImgs].forEach((s) => { if (j.region && !IMG_REGION[s]) IMG_REGION[s] = j.region; });
+const IMG_REGIONS = {};
+for (const j of Object.values(journeys)) [...j.slides, ...j.dayImgs].forEach((s) => { if (j.region) (IMG_REGIONS[s] = IMG_REGIONS[s] || new Set()).add(j.region); });
+/* a generic photo (a table, a yacht, an e-bike) only gets a region if every journey that uses it is in that one region */
+const IMG_REGION = Object.fromEntries(Object.entries(IMG_REGIONS).map(([s, set]) => [s, set.size === 1 ? [...set][0] : '']));
 
 /* ------------------------------------------------------------------ gallery data */
 function describe(src) {
@@ -150,7 +153,7 @@ function describe(src) {
   if (m && PLACE[m[1]]) { const [n, r, t] = PLACE[m[1]]; return { caption: ALTS[src] || n, region: r, theme: t }; }
   m = src.match(/^\/img\/moments\/([a-z]+)(?:-\d+)?\.webp$/);
   if (m && MOMENT[m[1]]) {
-    const [c, t] = MOMENT[m[1]]; const r = IMG_REGION[src] || (m[1] === 'wetland' || m[1] === 'oak' ? 'slavonija-baranja' : '');
+    const [c, t] = MOMENT[m[1]]; const r = IMG_REGION[src] || '';
     return { caption: ALTS[src] || (r ? `${c}, ${REGIONS[r].short}` : c), region: r, theme: t };
   }
   return null;
@@ -196,7 +199,7 @@ function strip({ id, kicker, title, lede = '', items, more = '', moreText = 'Vie
 function journeyCard(j, { tall = false } = {}) {
   const r = j.region ? REGIONS[j.region].short : '';
   return `<li><a class="ax-card${tall ? ' ax-card--tall' : ''}" href="${j.path}"><span class="ax-media ax-card__media">${img(j.slides[0], { alt: '', sizes: '(max-width: 620px) 100vw, (max-width: 900px) 50vw, 33vw' })}</span>`
-    + `<span class="ax-card__kicker">${esc([r, durationOf(j)].filter(Boolean).join(' · '))}</span><span class="ax-card__title">${esc(j.title)}</span>`
+    + `<span class="ax-card__kicker">${esc([r, durationOf(j)].filter(Boolean).join(' · '))}</span><span class="ax-card__title">${esc(j.cardTitle || j.title)}</span>`
     + `<span class="ax-card__meta"><span>${esc(shortPrice(j))}</span><span class="ax-arrow" aria-hidden="true">→</span></span></a></li>`;
 }
 function figure(src, caption, { wide = false, credit = '' } = {}) {
@@ -472,7 +475,7 @@ function upgradeOneDay(doc) {
 
 function upgradeFleet(doc) {
   const items = doc.querySelectorAll('.ls-item');
-  const pics = [['u:1552160757-52790c6f4faf', 'A private speedboat crossing'], ['/img/places/hvar-2.webp', 'Hvar harbour'], ['/img/fleet/v-class-square-transfer.webp', 'A Mercedes V-Class at the waterfront']];
+  const pics = [['u:1454452176678-c0437432bba6', 'A motor boat in a hidden island channel'], ['/img/places/hvar-2.webp', 'Hvar harbour'], ['/img/fleet/v-class-square-transfer.webp', 'A Mercedes V-Class at the waterfront']];
   items.forEach((it, i) => { if (pics[i]) it.insertBefore(frag(doc, `<span class="ax-media ax-lsmedia">${img(pics[i][0], { alt: pics[i][1], sizes: '(max-width: 760px) 100vw, 33vw' })}</span>`), it.firstChild); });
   const close = doc.querySelector('.landsea__close');
   if (close) close.insertAdjacentHTML('beforeend', ' <a href="/transfers">How our transfers work →</a>');
@@ -481,22 +484,22 @@ function upgradeFleet(doc) {
 function upgradeTransfers(doc) {
   const header = doc.querySelector('main .page-header');
   const art = doc.querySelector('main article.prose');
-  if (art) art.insertBefore(frag(doc, figure('/img/fleet/v-class-square-transfer.webp', 'A Mercedes V-Class transfer in the old town', { wide: true })), art.firstChild);
+  if (art) art.insertBefore(frag(doc, figure('/img/fleet/v-class-square-transfer.webp', 'A Mercedes V-Class transfer', { wide: true })), art.firstChild);
   const h2s = [...doc.querySelectorAll('main article.prose > h2')];
   split(doc, h2s.find((h) => /vehicles/i.test(text(h))), '/img/fleet/e-class-dusk-lake.webp', 'The Mercedes E-Class at dusk', false);
   split(doc, h2s.find((h) => /drivers/i.test(text(h))), '/img/fleet/e-class-cabin-detail.webp', 'Inside the E-Class', true);
-  split(doc, h2s.find((h) => /logistics/i.test(text(h))), 'u:1552160757-52790c6f4faf', 'A sea transfer between islands', false);
+  split(doc, h2s.find((h) => /logistics/i.test(text(h))), '/img/moments/boat-2.webp', 'On the water', false);
 }
 
 function upgradeCharter(doc) {
   const art = doc.querySelector('main article.prose');
   const lede2 = art && art.querySelector('p.charter-lede + p');
-  if (lede2) insertAfter(doc, lede2, figure('/img/moments/yacht-2.webp', 'A private yacht in a quiet Dalmatian bay', { wide: true }));
+  if (lede2) insertAfter(doc, lede2, figure('/img/moments/yacht-2.webp', 'A private yacht at anchor', { wide: true }));
   const ways = doc.querySelectorAll('.way');
   const wp = [['u:1598841019800-aaa24dba28be', 'A sailing yacht under way'], ['/img/moments/yacht-5.webp', 'Life aboard on a multi-day journey']];
   ways.forEach((w, i) => w.insertBefore(frag(doc, `<span class="ax-media ax-waymedia">${img(wp[i][0], { alt: wp[i][1], sizes: '(max-width: 760px) 100vw, 380px' })}</span>`), w.firstChild));
   const searchH = [...doc.querySelectorAll('main article.prose > h2')].find((h) => /search/i.test(text(h)));
-  const water = galleryFor({ theme: 'water', n: 6, prefer: ['/img/moments/yacht-4.webp', 'u:1711435340560-93c55e756a4d', '/img/moments/swim-3.webp', 'u:1603377817563-5ccd33e57d05', '/img/moments/yacht-6.webp', 'u:1454452176678-c0437432bba6'] });
+  const water = galleryFor({ theme: 'water', n: 6, prefer: ['/img/moments/yacht-4.webp', 'u:1598841019800-aaa24dba28be', '/img/moments/swim-3.webp', 'u:1603377817563-5ccd33e57d05', '/img/moments/yacht-6.webp', 'u:1454452176678-c0437432bba6'] });
   if (searchH) insertBefore(doc, searchH, `<div class="ax-bleed ax-reveal" style="margin:clamp(40px,6vw,72px) auto">${mosaic(water, 'charter')}</div>`);
   const form = doc.querySelector('form.search');
   if (form) { form.setAttribute('data-bm', '8264'); form.setAttribute('aria-label', 'Search charter availability'); }
@@ -505,13 +508,13 @@ function upgradeCharter(doc) {
 function upgradeStays(doc) {
   const h2s = [...doc.querySelectorAll('main article.prose > h2')];
   const find = (re) => h2s.find((h) => re.test(text(h)));
-  split(doc, find(/selection/i), '/img/moments/stay-3.webp', 'A curated stay', false);
+  split(doc, find(/selection/i), '/img/moments/stay-3.webp', 'One of the stays Adrion works with', false);
   const two = find(/two-base/i);
   if (two && two.nextElementSibling) insertAfter(doc, two.nextElementSibling, `<figure class="ax-duo ax-reveal"><span class="ax-media">${img('/img/places/lokvarsko-2.webp', { alt: 'Lokvarsko Lake in Gorski Kotar', sizes: '380px' })}</span><span class="ax-media">${img('/img/places/hvar-2.webp', { alt: 'Hvar harbour at dusk', sizes: '380px' })}</span><figcaption>One base inland, one on the coast.</figcaption></figure>`);
-  split(doc, find(/named-tier/i), 'u:1776763018821-8feeaeeee0a5', 'A boutique hotel room', true);
-  split(doc, find(/villas/i), 'u:1543489822-c49534f3271f', 'An infinity pool above the Adriatic', false);
+  split(doc, find(/named-tier/i), '/img/moments/stay-4.webp', 'One of the stays Adrion works with', true);
+  split(doc, find(/villas/i), '/img/moments/stay-5.webp', 'One of the stays Adrion works with', false);
   const searchH = find(/search/i);
-  const stays = galleryFor({ theme: 'stays', n: 6, prefer: ['/img/moments/stay.webp', 'u:1416331108676-a22ccb276e35', '/img/moments/stay-4.webp', 'u:1629199159634-28a88785cee5', '/img/moments/stay-5.webp', 'u:1662385930165-49ebaa03b152'] });
+  const stays = galleryFor({ theme: ['stays', 'table'], n: 6, prefer: ['/img/moments/stay.webp', '/img/moments/stay-2.webp', '/img/moments/dining-9.webp', '/img/moments/wine-6.webp', '/img/moments/oysters.webp', '/img/moments/truffle-2.webp'] });
   if (searchH) insertBefore(doc, searchH, `<div class="ax-bleed ax-reveal" style="margin:clamp(40px,6vw,72px) auto">${mosaic(stays, 'stays')}</div>`);
   const form = doc.querySelector('form.search');
   if (form) { form.setAttribute('data-handoff', 'stays-search'); form.setAttribute('aria-label', 'Search available stays'); }
