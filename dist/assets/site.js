@@ -183,7 +183,7 @@
     if (cv && !reduce) {
       const N = +cv.dataset.count;
       const hi = innerWidth * Math.min(devicePixelRatio || 1, 2) > 1800 && !(navigator.connection && navigator.connection.saveData);
-      const pattern = hi ? cv.dataset.frames2x : cv.dataset.frames1x;
+      const pattern = cv.getAttribute(hi ? 'data-frames-2x' : 'data-frames-1x');
       const url = (i) => pattern.replace('{n}', String(i + 1).padStart(3, '0'));
       const frames = new Array(N); const ctx = cv.getContext('2d'); let shown = -1; let want = 0;
       const nearest = (i) => { for (let d = 0; d < N; d++) { if (frames[i - d] && frames[i - d].complete && frames[i - d].naturalWidth) return frames[i - d]; if (frames[i + d] && frames[i + d].complete && frames[i + d].naturalWidth) return frames[i + d]; } return null; };

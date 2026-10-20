@@ -58,6 +58,14 @@ const ok = (name, cond) => console.log((cond ? 'PASS ' : 'FAIL ') + name);
   await mp.click('nav.bar .toggle'); ok('mobile menu opens', await mp.evaluate(() => document.querySelector('.overlay').classList.contains('open')) && (await mp.getAttribute('nav.bar .toggle', 'aria-expanded')) === 'true');
   ok('gallery in mobile menu', (await mp.$$('.overlay a[href="/gallery"]')).length === 1);
   await mp.keyboard.press('Escape'); ok('escape closes menu', !(await mp.evaluate(() => document.querySelector('.overlay').classList.contains('open'))));
+  for (const pv of ['/home-preview', '/home-preview-drone']) {
+    await pg.goto(U + pv); await pg.waitForTimeout(400);
+    await pg.evaluate(() => { const z = document.querySelector('.ax-zoom'); scrollTo(0, (z.offsetHeight - innerHeight) * 0.3); }); await pg.waitForTimeout(400);
+    const t = await pg.$eval('.ax-zoom__g', (g) => g.getAttribute('transform') || '');
+    ok(pv + ': intro zoom is running', /scale\(/.test(t));
+    await pg.evaluate(() => { const z = document.querySelector('.ax-zoom'); scrollTo(0, (z.offsetHeight - innerHeight) * 0.63); }); await pg.waitForTimeout(500);
+    ok(pv + ': headline visible after the zoom', +(await pg.$eval('.ax-zoom__hero', (h) => getComputedStyle(h).opacity)) > 0.9);
+  }
   ok('no JS errors', errs.length === 0); if (errs.length) console.log(errs);
   await b.close(); srv.close();
 })();
