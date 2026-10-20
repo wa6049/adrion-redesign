@@ -475,7 +475,8 @@ a.journey.ax-has-thumb, div.journey.ax-has-thumb { align-items: center; gap: cla
   transform: scale(1.22); transform-origin: 50% 55%; will-change: transform;
   filter: saturate(.92) contrast(1.04);
 }
-.ax-zoom__veil { position: absolute; inset: 0; background: linear-gradient(180deg, #0a0a0a66 0%, #0a0a0a1f 40%, #0a0a0acc 100%), #0a0a0a; opacity: .18; pointer-events: none; }
+.ax-zoom__veil { position: absolute; inset: 0; background: linear-gradient(0deg, #0a0a0af2 0%, #0a0a0ab3 30%, #0a0a0a33 62%, #0a0a0a00 100%), linear-gradient(90deg, #0a0a0a99 0%, #0a0a0a00 60%); opacity: .12; pointer-events: none; }
+.ax-zoom__about::before { content: ''; position: absolute; inset: 0; background: #0a0a0a; opacity: .45; z-index: -1; }
 .ax-zoom__svg { position: absolute; inset: 0; width: 100%; height: 100%; display: block; }
 .ax-zoom__open {
   position: absolute; left: 0; right: 0; top: 50%; transform: translateY(calc(17vh + 26px));
@@ -487,7 +488,8 @@ a.journey.ax-has-thumb, div.journey.ax-has-thumb { align-items: center; gap: cla
 .ax-zoom__cue span { font-size: 10px; letter-spacing: .32em; text-transform: uppercase; color: var(--ink-3); }
 .ax-zoom__cue i { width: 1px; height: 38px; background: linear-gradient(var(--brand-gold), transparent); animation: ax-cue 2.2s var(--ease-inout) infinite; transform-origin: top; }
 @keyframes ax-cue { 0% { transform: scaleY(0); } 50% { transform: scaleY(1); } 100% { transform: scaleY(1); opacity: 0; } }
-.ax-zoom__hero { opacity: 0; z-index: 4; text-shadow: 0 2px 30px #0a0a0a99; }
+.ax-zoom__hero { opacity: 0; z-index: 4; text-shadow: 0 2px 24px #0a0a0acc, 0 0 2px #0a0a0a80; }
+.ax-zoom__hero .k { text-shadow: 0 1px 10px #0a0a0a, 0 0 2px #0a0a0a; }
 .ax-zoom__about {
   position: absolute; inset: 0; z-index: 5; display: flex; align-items: center; opacity: 0; pointer-events: none;
 }

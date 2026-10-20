@@ -381,7 +381,7 @@ function upgradeHomeIntro(doc) {
   <svg class="ax-zoom__svg" aria-hidden="true" focusable="false"><defs><mask id="ax-zoom-mask" maskUnits="userSpaceOnUse" x="0" y="0" width="100%" height="100%"><rect x="0" y="0" width="100%" height="100%" fill="#fff"></rect><g class="ax-zoom__g"><path fill="#000" fill-rule="evenodd" d="${LOGO_D}"></path></g></mask></defs><rect class="ax-zoom__cover" x="0" y="0" width="100%" height="100%" fill="#0a0a0a" mask="url(#ax-zoom-mask)"></rect><g class="ax-zoom__g ax-zoom__gold"><path fill="#d4af37" fill-rule="evenodd" d="${LOGO_D}"></path></g></svg>
   <div class="ax-zoom__open"><span class="ax-zoom__k">Adrion · Curated Croatia</span><p class="ax-zoom__line">Named for Biokovo, the mountain Strabo called Adrion</p></div>
   <div class="ax-zoom__cue" aria-hidden="true"><span>Scroll to enter</span><i></i></div>
-  <div class="hero-type svelte-1lxd2ek ax-zoom__hero"><span class="k svelte-1lxd2ek">Mount Biokovo · The Makarska Riviera</span><h1 id="ax-zoom-h" class="svelte-1lxd2ek">We don’t show you Croatia.<br class="svelte-1lxd2ek"><em class="svelte-1lxd2ek">We take you into it.</em></h1></div>
+  <div class="hero-type svelte-1lxd2ek ax-zoom__hero"><span class="k svelte-1lxd2ek">Mount Biokovo · Above the Makarska Riviera</span><h1 id="ax-zoom-h" class="svelte-1lxd2ek">We don’t show you Croatia.<br class="svelte-1lxd2ek"><em class="svelte-1lxd2ek">We take you into it.</em></h1></div>
   <div class="ax-zoom__about">${aboutHtml}</div>
  </div>
 </section>`;

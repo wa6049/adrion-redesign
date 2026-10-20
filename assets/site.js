@@ -168,7 +168,7 @@
       const heroIn = smooth(seg(p, 0.54, 0.62)), heroOut = smooth(seg(p, 0.72, 0.78));
       hero.style.opacity = String(heroIn * (1 - heroOut));
       hero.style.transform = `translateY(${((1 - heroIn) * 28 - heroOut * 20).toFixed(1)}px)`;
-      veil.style.opacity = String(0.18 + 0.6 * smooth(seg(p, 0.72, 0.82)));
+      veil.style.opacity = String(Math.min(1, 0.12 + 0.5 * smooth(seg(p, 0.5, 0.6)) + 0.38 * smooth(seg(p, 0.72, 0.82))));
       const ab = smooth(seg(p, 0.79, 0.88));
       aboutZ.style.opacity = String(ab);
       aboutZ.style.transform = `translateY(${((1 - ab) * 24).toFixed(1)}px)`;
