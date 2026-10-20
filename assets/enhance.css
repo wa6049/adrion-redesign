@@ -507,3 +507,4 @@ a.journey.ax-has-thumb, div.journey.ax-has-thumb { align-items: center; gap: cla
   .ax-zoom__open { transform: translateY(calc(12vh + 22px)); }
 }
 @media (prefers-reduced-motion: reduce) { .ax-zoom__cue i { animation: none; } }
+.ax-zoom__hero::before { content: ''; position: absolute; inset: -70px -120px -50px -80px; z-index: -1; pointer-events: none; background: radial-gradient(ellipse 60% 62% at 40% 55%, #0a0a0ad0 0%, #0a0a0a80 45%, #0a0a0a00 75%); }
