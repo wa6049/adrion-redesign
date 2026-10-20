@@ -17,6 +17,7 @@ const OUT = path.join(ROOT, 'dist');
 const ORIGIN = 'https://www.adriondmc.com';
 const IMG_BASE = process.env.IMG_BASE !== undefined ? process.env.IMG_BASE : ORIGIN;
 const VERSION = '2026-10-20';
+const ASSET_V = require('crypto').createHash('sha1').update(fs.readFileSync(path.join(ROOT, 'assets/enhance.css')) + fs.readFileSync(path.join(ROOT, 'assets/site.js'))).digest('hex').slice(0, 10);
 
 const CAP = require(path.join(ROOT, 'source/adrion-capture.json'));
 const { REGIONS, THEMES, PLACE, MOMENT, NAMED, EXCLUDE, COORDS } = require(path.join(ROOT, 'data/places.js'));
@@ -603,9 +604,9 @@ ${linkTags.join('\n')}
 ${preImg}<link rel="preconnect" href="https://images.unsplash.com">
 <link rel="stylesheet" href="${esc(FONT_CSS)}">
 ${cssList.map((u) => `<link rel="stylesheet" href="${u}">`).join('\n')}
-<link rel="stylesheet" href="/assets/enhance.css?v=${VERSION}">
+<link rel="stylesheet" href="/assets/enhance.css?v=${ASSET_V}">
 <script>document.documentElement.classList.add('js')</script>
-<script defer src="/assets/site.js?v=${VERSION}"></script>
+<script defer src="/assets/site.js?v=${ASSET_V}"></script>
 ${extraHead}${ldJson}
 </head>`;
 }
