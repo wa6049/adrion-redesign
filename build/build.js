@@ -365,6 +365,29 @@ function upgradeHome(doc, ld) {
   ld.push(ORG, { '@type': 'WebSite', '@id': ORIGIN + '/#website', url: ORIGIN + '/', name: 'Adrion', publisher: { '@id': ORIGIN + '/#agency' }, inLanguage: 'en' });
 }
 
+const LOGO_D = (() => { const l = CAP.pages['/'].head.links.find((x) => x.includes('data:image/svg')); return decodeURIComponent(l.match(/href="([^"]+)"/)[1]).match(/ d='([^']+)'/)[1]; })();
+/* Homepage intro: the gold Adrion "A" becomes a window onto Biokovo (the mountain Strabo called Adrion)
+   and the camera flies through its thickest stroke into the landscape. */
+function upgradeHomeIntro(doc) {
+  const intro = doc.querySelector('section.intro');
+  if (!intro) return;
+  const about = intro.querySelector('.about');
+  const aboutHtml = about ? about.outerHTML.replace(/ style="[^"]*"/, '') : '';
+  const bg = '/img/regions/srednja-dalmacija/biokovo-over-makarska.webp';
+  const html = `<section class="ax-zoom" aria-labelledby="ax-zoom-h" data-focus="386,384" data-center="296,251">
+ <div class="ax-zoom__stage">
+  <img class="ax-zoom__bg" src="${imgUrl(bg)}" width="2000" height="1334" alt="Mount Biokovo above the Makarska Riviera" fetchpriority="high" decoding="async">
+  <div class="ax-zoom__veil" aria-hidden="true"></div>
+  <svg class="ax-zoom__svg" aria-hidden="true" focusable="false"><defs><mask id="ax-zoom-mask" maskUnits="userSpaceOnUse" x="0" y="0" width="100%" height="100%"><rect x="0" y="0" width="100%" height="100%" fill="#fff"></rect><g class="ax-zoom__g"><path fill="#000" fill-rule="evenodd" d="${LOGO_D}"></path></g></mask></defs><rect class="ax-zoom__cover" x="0" y="0" width="100%" height="100%" fill="#0a0a0a" mask="url(#ax-zoom-mask)"></rect><g class="ax-zoom__g ax-zoom__gold"><path fill="#d4af37" fill-rule="evenodd" d="${LOGO_D}"></path></g></svg>
+  <div class="ax-zoom__open"><span class="ax-zoom__k">Adrion · Curated Croatia</span><p class="ax-zoom__line">Named for Biokovo, the mountain Strabo called Adrion</p></div>
+  <div class="ax-zoom__cue" aria-hidden="true"><span>Scroll to enter</span><i></i></div>
+  <div class="hero-type svelte-1lxd2ek ax-zoom__hero"><span class="k svelte-1lxd2ek">Mount Biokovo · The Makarska Riviera</span><h1 id="ax-zoom-h" class="svelte-1lxd2ek">We don’t show you Croatia.<br class="svelte-1lxd2ek"><em class="svelte-1lxd2ek">We take you into it.</em></h1></div>
+  <div class="ax-zoom__about">${aboutHtml}</div>
+ </div>
+</section>`;
+  intro.outerHTML = html;
+}
+
 function upgradeDestinations(doc, ld) {
   const stage = doc.querySelector('.stage-map .stage');
   if (stage) {
@@ -745,6 +768,15 @@ for (const p of Object.keys(PAGES)) {
   const shell = parseHTML('<!doctype html><html><head></head><body>' + CAP.pages['/fleet'].body.replace(/<!--[\s\S]*?-->/g, '') + '</body></html>').document;
   const main = `<main class="ax-gallery-page"><header class="ax-gallery-hero"><span class="ax-kicker">Page not found</span><h1>This path does not lead anywhere</h1><p class="ax-lede">The page may have moved. Start again from the regions, or tell us where you would like to go.</p><p style="margin-top:32px;display:flex;gap:14px;flex-wrap:wrap"><a class="ax-btn" href="/destinations">Destinations</a><a class="ax-btn" href="/inquire">Inquire</a></p></header></main>`;
   write(path.join(OUT, '404.html'), render('/404', shell, { main, title: 'Page not found — Adrion', metas: ['<meta name="robots" content="noindex">'], links: [], as: '/404' }));
+}
+/* homepage preview with the new intro (live homepage untouched until approved) */
+{
+  const doc = parseHTML('<!doctype html><html><head></head><body>' + CAP.pages['/'].body.replace(/<!--[\s\S]*?-->/g, '') + '</body></html>').document;
+  upgradeHomeIntro(doc);
+  const metas = CAP.pages['/'].head.metas.concat(['<meta name="robots" content="noindex">']);
+  const links = CAP.pages['/'].head.links.filter((l) => !/canonical/.test(l)).concat([`<link rel="canonical" href="${ORIGIN}/">`]);
+  const html = render('/', doc, { metas, links, title: 'Preview: new intro — Adrion Custom Travel Agency' });
+  write(path.join(OUT, 'home-preview/index.html'), html);
 }
 /* CSS + JS assets (original stylesheets kept at their original paths) */
 for (const f of CSS_FILES) write(path.join(OUT, f.url), f.css);

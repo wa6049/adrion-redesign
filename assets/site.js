@@ -121,6 +121,66 @@
     update();
   }
 
+  /* ---------- Home: zoom through the Adrion "A" into Biokovo ---------- */
+  const zoom = $('section.ax-zoom');
+  if (zoom) {
+    const stageZ = $('.ax-zoom__stage', zoom);
+    const svgZ = $('.ax-zoom__svg', zoom);
+    const groups = $$('.ax-zoom__g', zoom);
+    const gold = $('.ax-zoom__gold', zoom);
+    const cover = $('.ax-zoom__cover', zoom);
+    const bgZ = $('.ax-zoom__bg', zoom);
+    const veil = $('.ax-zoom__veil', zoom);
+    const open = $('.ax-zoom__open', zoom);
+    const cueZ = $('.ax-zoom__cue', zoom);
+    const hero = $('.ax-zoom__hero', zoom);
+    const aboutZ = $('.ax-zoom__about', zoom);
+    const [fx, fy] = zoom.dataset.focus.split(',').map(Number);
+    const [cx0, cy0] = zoom.dataset.center.split(',').map(Number);
+    const clamp01 = (v) => Math.max(0, Math.min(1, v));
+    const seg = (p, a, b) => clamp01((p - a) / (b - a));
+    const smooth = (t) => t * t * (3 - 2 * t);
+    const easeIn = (t) => t * t * t;
+    if (reduce) zoom.classList.add('is-static');
+    let tickZ = false;
+    const drawZ = () => {
+      tickZ = false;
+      const W = innerWidth, H = stageZ.clientHeight || innerHeight;
+      const total = zoom.offsetHeight - H;
+      const p = reduce ? 1 : (total > 0 ? clamp01(-zoom.getBoundingClientRect().top / total) : 0);
+      svgZ.setAttribute('viewBox', `0 0 ${W} ${H}`);
+      const s0 = Math.min((H * 0.34) / 502, (W * 0.62) / 593);
+      const sEnd = (Math.hypot(W, H) / 2 / 22) * 1.25;
+      const z = easeIn(seg(p, 0.07, 0.52));
+      const sc = s0 * Math.pow(sEnd / s0, z);
+      const m = smooth(clamp01(z * 1.6));
+      const px = cx0 + (fx - cx0) * m, py = cy0 + (fy - cy0) * m;
+      const sx = W / 2, sy = H * (W < 760 ? 0.44 : 0.46);
+      const tf = `translate(${sx.toFixed(2)} ${sy.toFixed(2)}) scale(${sc.toFixed(5)}) translate(${(-px).toFixed(3)} ${(-py).toFixed(3)})`;
+      groups.forEach((g) => g.setAttribute('transform', tf));
+      gold.style.opacity = String(1 - smooth(seg(p, 0.015, 0.09)));
+      const through = z >= 0.999;
+      cover.style.display = through ? 'none' : '';
+      gold.style.display = through ? 'none' : '';
+      bgZ.style.transform = `scale(${(1.22 - 0.22 * smooth(seg(p, 0.3, 0.72))).toFixed(4)})`;
+      open.style.opacity = String(1 - smooth(seg(p, 0.01, 0.07)));
+      cueZ.style.opacity = String(1 - smooth(seg(p, 0, 0.04)));
+      const heroIn = smooth(seg(p, 0.54, 0.62)), heroOut = smooth(seg(p, 0.72, 0.78));
+      hero.style.opacity = String(heroIn * (1 - heroOut));
+      hero.style.transform = `translateY(${((1 - heroIn) * 28 - heroOut * 20).toFixed(1)}px)`;
+      veil.style.opacity = String(0.18 + 0.6 * smooth(seg(p, 0.72, 0.82)));
+      const ab = smooth(seg(p, 0.79, 0.88));
+      aboutZ.style.opacity = String(ab);
+      aboutZ.style.transform = `translateY(${((1 - ab) * 24).toFixed(1)}px)`;
+      aboutZ.style.pointerEvents = ab > 0.5 ? 'auto' : 'none';
+      hero.style.pointerEvents = heroIn > 0.5 && heroOut < 0.5 ? 'auto' : 'none';
+    };
+    const reqZ = () => { if (!tickZ) { tickZ = true; requestAnimationFrame(drawZ); } };
+    addEventListener('scroll', reqZ, { passive: true });
+    addEventListener('resize', reqZ);
+    drawZ();
+  }
+
   /* ---------- Home: region hover backdrops ---------- */
   const where = $('section.where');
   if (where) {

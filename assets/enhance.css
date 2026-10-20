@@ -464,3 +464,44 @@ a.journey.ax-has-thumb, div.journey.ax-has-thumb { align-items: center; gap: cla
 [data-mode="phone"][data-short] .ax-reel__notes { bottom: 50px; left: auto; right: var(--gutter); transform: none; width: 34vw; text-align: right; }
 [data-mode="phone"][data-short] .ax-reel__note > span { font-size: 16px; }
 @media (prefers-reduced-motion: reduce) { .ax-roll.is-in { animation: none; } }
+
+/* ==========================================================================
+   Homepage intro: zoom through the Adrion "A" into Biokovo
+   ========================================================================== */
+.ax-zoom { position: relative; height: 560vh; background: var(--brand-obsidian); }
+.ax-zoom__stage { position: sticky; top: 0; height: 100vh; height: 100svh; overflow: hidden; }
+.ax-zoom__bg {
+  position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; object-position: 50% 45%;
+  transform: scale(1.22); transform-origin: 50% 55%; will-change: transform;
+  filter: saturate(.92) contrast(1.04);
+}
+.ax-zoom__veil { position: absolute; inset: 0; background: linear-gradient(180deg, #0a0a0a66 0%, #0a0a0a1f 40%, #0a0a0acc 100%), #0a0a0a; opacity: .18; pointer-events: none; }
+.ax-zoom__svg { position: absolute; inset: 0; width: 100%; height: 100%; display: block; }
+.ax-zoom__open {
+  position: absolute; left: 0; right: 0; top: 50%; transform: translateY(calc(17vh + 26px));
+  text-align: center; z-index: 3; pointer-events: none; padding: 0 var(--gutter);
+}
+.ax-zoom__k { display: block; font-size: 11px; letter-spacing: .4em; text-transform: uppercase; color: var(--brand-gold); }
+.ax-zoom__line { margin: 14px auto 0; max-width: 34ch; font-family: var(--font-display); font-weight: 300; font-style: italic; font-size: clamp(16px, 1.6vw, 21px); color: var(--ink-2); }
+.ax-zoom__cue { position: absolute; left: 50%; bottom: 28px; transform: translateX(-50%); z-index: 3; display: flex; flex-direction: column; align-items: center; gap: 12px; pointer-events: none; }
+.ax-zoom__cue span { font-size: 10px; letter-spacing: .32em; text-transform: uppercase; color: var(--ink-3); }
+.ax-zoom__cue i { width: 1px; height: 38px; background: linear-gradient(var(--brand-gold), transparent); animation: ax-cue 2.2s var(--ease-inout) infinite; transform-origin: top; }
+@keyframes ax-cue { 0% { transform: scaleY(0); } 50% { transform: scaleY(1); } 100% { transform: scaleY(1); opacity: 0; } }
+.ax-zoom__hero { opacity: 0; z-index: 4; text-shadow: 0 2px 30px #0a0a0a99; }
+.ax-zoom__about {
+  position: absolute; inset: 0; z-index: 5; display: flex; align-items: center; opacity: 0; pointer-events: none;
+}
+.ax-zoom__about .about { opacity: 1 !important; }
+/* reduced motion: no zoom, the photograph with the headline and the about text stacked */
+.ax-zoom.is-static { height: auto; }
+.ax-zoom.is-static .ax-zoom__stage { position: relative; height: auto; min-height: 100svh; }
+.ax-zoom.is-static .ax-zoom__svg, .ax-zoom.is-static .ax-zoom__open, .ax-zoom.is-static .ax-zoom__cue { display: none; }
+.ax-zoom.is-static .ax-zoom__bg { position: absolute; transform: none; }
+.ax-zoom.is-static .ax-zoom__hero { position: relative; opacity: 1; left: auto; bottom: auto; padding: 38vh var(--gutter) 6vh; max-width: none; }
+.ax-zoom.is-static .ax-zoom__about { position: relative; opacity: 1; pointer-events: auto; padding-bottom: 12vh; }
+.ax-zoom.is-static .ax-zoom__veil { opacity: .6; }
+@media (width <= 760px) {
+  .ax-zoom { height: 520vh; }
+  .ax-zoom__open { transform: translateY(calc(12vh + 22px)); }
+}
+@media (prefers-reduced-motion: reduce) { .ax-zoom__cue i { animation: none; } }
