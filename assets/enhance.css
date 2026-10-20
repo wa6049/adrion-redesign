@@ -333,14 +333,13 @@ a.journey.ax-has-thumb, div.journey.ax-has-thumb { align-items: center; gap: cla
 .ax-reel { position: relative; }
 .ax-reel__stage {
   position: sticky; top: 0; height: 100vh; height: 100svh; overflow: hidden;
-  perspective: 1600px; perspective-origin: 50% 45%;
   background: radial-gradient(ellipse at 50% 55%, #17150f 0%, var(--brand-obsidian) 62%);
 }
 .ax-reel__spacer { pointer-events: none; }
-.ax-reel__track { position: absolute; inset: 0; transform-style: preserve-3d; }
+.ax-reel__track { position: absolute; inset: 0; z-index: 1; }
 .ax-reel__card {
   --dim: 0;
-  position: absolute; left: 50%; top: 52%;
+  position: absolute; left: 50%; top: 47%;
   width: clamp(220px, 30vw, 460px); aspect-ratio: 4 / 3;
   padding: 0; border: 0; cursor: pointer; background: var(--brand-champagne);
   box-shadow: 0 0 0 8px var(--brand-champagne), 0 40px 80px -20px #000000d9, 0 18px 30px -18px #000;
@@ -377,7 +376,7 @@ a.journey.ax-has-thumb, div.journey.ax-has-thumb { align-items: center; gap: cla
   display: grid; grid-template-columns: 1fr 1fr; gap: clamp(28px, 5vw, 80px); width: min(720px, calc(100vw - 2 * var(--gutter)));
   text-align: center;
 }
-.ax-reel__note { display: block; color: var(--ink-1); text-decoration: none; overflow: hidden; }
+.ax-reel__note { display: block; color: var(--ink-1); text-decoration: none; overflow: hidden; text-shadow: 0 1px 14px #0a0a0a, 0 0 2px #0a0a0a; }
 .ax-reel__note small {
   display: block; font-size: 9.5px; letter-spacing: .24em; text-transform: uppercase; color: var(--brand-gold); margin-bottom: 8px;
 }

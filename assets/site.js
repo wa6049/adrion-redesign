@@ -495,9 +495,9 @@
           card.setAttribute('aria-label', it.c);
         }
         const sc = 1 - Math.min(ad, 4) * 0.09;
-        const tx = d * dx; const ty = -d * dy;
+        const tx = d * dx; const ty = -d * dy * (d < 0 ? 0.55 : 1);
         const ry = Math.max(-1, Math.min(1, d)) * -14;
-        card.style.transform = `translate3d(calc(-50% + ${tx.toFixed(1)}px), calc(-50% + ${ty.toFixed(1)}px), ${(-ad * 120).toFixed(0)}px) rotateX(18deg) rotateY(${ry.toFixed(2)}deg) rotateZ(-7deg) scale(${sc.toFixed(3)})`;
+        card.style.transform = `translate(calc(-50% + ${tx.toFixed(1)}px), calc(-50% + ${ty.toFixed(1)}px)) perspective(1400px) rotateX(18deg) rotateY(${ry.toFixed(2)}deg) rotateZ(-7deg) scale(${sc.toFixed(3)})`;
         card.style.zIndex = String(100 - Math.round(ad * 10));
         card.style.opacity = String(Math.max(0, Math.min(1, 4.2 - ad)));
         card.style.setProperty('--dim', Math.min(1, ad).toFixed(3));
