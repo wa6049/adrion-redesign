@@ -647,6 +647,7 @@ function galleryMain() {
 <section class="ax-reel" aria-label="Photograph reel">
  <div class="ax-reel__stage">
   <div class="ax-reel__loader" aria-hidden="true"><span class="ax-reel__count">0</span></div>
+  <div class="ax-reel__scene">
   <aside class="ax-reel__info" aria-live="polite">
    <p class="ax-reel__title"><span class="ax-roll" data-k="title">Croatia, frame by frame</span></p>
    <dl class="ax-reel__table">
@@ -659,6 +660,7 @@ function galleryMain() {
   <div class="ax-reel__notes">
    <a class="ax-reel__note" data-k="note1" href="/destinations"><small class="ax-roll" data-k="n1k"></small><span class="ax-roll" data-k="n1"></span></a>
    <a class="ax-reel__note" data-k="note2" href="/inquire"><small class="ax-roll" data-k="n2k"></small><span class="ax-roll" data-k="n2"></span></a>
+  </div>
   </div>
   <div class="ax-reel__bar">
    <div class="ax-reel__index"><button type="button" class="ax-reel__indexbtn" aria-expanded="false" aria-controls="ax-index">Index <span aria-hidden="true">⌄</span></button>

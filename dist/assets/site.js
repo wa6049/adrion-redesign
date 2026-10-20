@@ -443,8 +443,30 @@
       });
       track.appendChild(b); pool.push(b);
     }
-    const stepPx = () => Math.max(260, innerHeight * (innerWidth < 760 ? 0.62 : 0.5));
-    const layout = () => { spacer.style.height = ((items.length - 1) * stepPx()) + 'px'; totalEl.textContent = pad(items.length); };
+    const scene = $('.ax-reel__scene', reelEl);
+    const CW = 1540, CH = 850; // approved desktop composition (the 70% zoom view)
+    let G = {};
+    const geom = () => {
+      const W = innerWidth, H = stage.clientHeight || innerHeight;
+      let mode = 'desk';
+      if (W <= 760 || H <= 500) mode = 'phone';
+      else if (H > W * 0.85) mode = 'tablet';
+      stage.dataset.mode = mode;
+      if (mode === 'phone' && H <= 500) stage.dataset.short = ''; else delete stage.dataset.short;
+      if (mode === 'desk') {
+        const z = Math.max(0.55, Math.min(1.6, Math.min(W / CW, H / CH)));
+        G = { mode, z, VW: W / z, VH: H / z, dx: 462, dy: 110, prev: 0.72 };
+      } else if (mode === 'tablet') {
+        G = { mode, z: 1, VW: W, VH: H, dx: W * 0.64, dy: H * 0.045, prev: 1 };
+      } else {
+        const short = H <= 500;
+        G = { mode, z: 1, VW: W, VH: H, dx: short ? W * 0.42 : W * 0.7, dy: short ? H * 0.06 : H * 0.035, prev: 1 };
+      }
+      scene.style.width = G.VW + 'px'; scene.style.height = G.VH + 'px';
+      scene.style.transform = G.z === 1 ? '' : 'scale(' + G.z + ')';
+    };
+    const stepPx = () => Math.max(260, innerHeight * (G.mode === 'phone' ? 0.62 : 0.5));
+    const layout = () => { geom(); spacer.style.height = ((items.length - 1) * stepPx()) + 'px'; totalEl.textContent = pad(items.length); };
     const topOf = () => reelEl.getBoundingClientRect().top + scrollY;
     const goTo = (k) => {
       k = Math.max(0, Math.min(items.length - 1, k));
@@ -479,10 +501,8 @@
       if (page.dataset.view !== 'reel' || !items.length) return;
       const st = stepPx();
       f = Math.max(0, Math.min(items.length - 1, (scrollY - topOf()) / st));
-      const W = innerWidth; const H = innerHeight; const mobile = W < 760;
       const base = Math.round(f);
-      const dx = mobile ? W * 0.62 : Math.min(W * 0.3, 470);
-      const dy = mobile ? H * 0.07 : H * 0.13;
+      const dx = G.dx; const dy = G.dy;
       pool.forEach((card, i) => {
         const k = base - Math.floor(POOL / 2) + i;
         const it = items[k];
@@ -495,7 +515,7 @@
           card.setAttribute('aria-label', it.c);
         }
         const sc = 1 - Math.min(ad, 4) * 0.09;
-        const tx = d * dx; const ty = -d * dy * (d < 0 ? 0.55 : 1);
+        const tx = d * dx; const ty = -d * dy * (d < 0 ? G.prev : 1);
         const ry = Math.max(-1, Math.min(1, d)) * -14;
         card.style.transform = `translate(calc(-50% + ${tx.toFixed(1)}px), calc(-50% + ${ty.toFixed(1)}px)) perspective(1400px) rotateX(18deg) rotateY(${ry.toFixed(2)}deg) rotateZ(-7deg) scale(${sc.toFixed(3)})`;
         card.style.zIndex = String(100 - Math.round(ad * 10));
