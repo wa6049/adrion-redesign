@@ -511,3 +511,4 @@ a.journey.ax-has-thumb, div.journey.ax-has-thumb { align-items: center; gap: cla
 .ax-zoom__canvas { opacity: 0; transition: opacity .6s var(--ease-out); }
 .ax-zoom__canvas.is-on { opacity: 1; }
 .ax-zoom.is-static .ax-zoom__canvas { display: none; }
+.ax-zoom__poster { object-view-box: inset(26% 0 0 0); object-position: 50% 50%; }

@@ -181,7 +181,7 @@
     const cv = $('.ax-zoom__canvas', zoom);
     let drawFrame = null;
     if (cv && !reduce) {
-      const N = +cv.dataset.count;
+      const N = +cv.dataset.count; const CROP_TOP = 0.26;
       const hi = innerWidth * Math.min(devicePixelRatio || 1, 2) > 1800 && !(navigator.connection && navigator.connection.saveData);
       const pattern = cv.getAttribute(hi ? 'data-frames-2x' : 'data-frames-1x');
       const url = (i) => pattern.replace('{n}', String(i + 1).padStart(3, '0'));
@@ -192,8 +192,11 @@
         want = Math.max(0, Math.min(N - 1, Math.round(p * (N - 1))));
         const img = nearest(want); if (!img) return;
         const key = img.src; if (key === shown) return; shown = key;
-        const cw = cv.width, ch = cv.height, iw = img.naturalWidth, ih = img.naturalHeight, k = Math.max(cw / iw, ch / ih);
-        ctx.drawImage(img, (cw - iw * k) / 2, (ch - ih * k) / 2, iw * k, ih * k);
+        // the source frames carry a black band over their top quarter: crop it, then cover-fit the rest
+        const top = img.naturalHeight * CROP_TOP;
+        const cw = cv.width, ch = cv.height, iw = img.naturalWidth, ih = img.naturalHeight - top, k = Math.max(cw / iw, ch / ih);
+        const sw = cw / k, sh = ch / k;
+        ctx.drawImage(img, (iw - sw) / 2, top + (ih - sh) * 0.5, sw, sh, 0, 0, cw, ch);
         cv.classList.add('is-on');
       };
       // load coarse-to-fine so scrubbing works early: every 16th frame, then 8th, 4th, 2nd, all
